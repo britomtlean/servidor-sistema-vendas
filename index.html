@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Demo</title>
+  <style>
+    body {
+      font-family: Arial;
+      min-width: 100vw;
+      max-width: 1280px;
+      min-height: 100vh;
+      margin: 40px auto;
+      padding: 0 5%;
+      background-color: rgb(96, 167, 167);
+      font-size: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+    }
+
+    #mensagens {
+      border: 1px solid #ccc;
+      padding: 20px;
+      height: 50vh;
+      overflow-y: auto;
+      background-color: rgb(191, 194, 196);
+      min-width: 600px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Central de pedidos:</h1>
+
+  <div style="display: flex; justify-content: start; align-items: center; flex-direction: column;" id="mensagens"></div>
+
+
+  <!-- Importa o cliente do Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io(); // conecta ao servidor
+
+    const mensagensDiv = document.getElementById('mensagens');
+
+    // Recebe mensagem do servidor
+    socket.on('mensagem_retorno', (msg) => {
+
+
+      const title = document.createElement('h3');
+      const ul = document.createElement('ul');
+      const pedido = document.createElement('div');
+      pedido.style.display = "flex";
+
+      title.innerHTML = "Pedido: XXX";
+
+      msg.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
+        ul.appendChild(li);
+      });
+
+      pedido.appendChild(title);
+      pedido.appendChild(ul);
+      mensagensDiv.appendChild(pedido)
+      mensagensDiv.appendChild(document.createElement('hr'));
+    });
+  </script>
+</body>
+
+</html>
