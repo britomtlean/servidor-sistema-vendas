@@ -21,7 +21,7 @@ router.get('/vendas', async (req, res) => {
             },
         },
         orderBy: {
-            id_vendas: 'asc', // ou 'desc' para ordem decrescente
+            data_vendas: 'desc', // ou 'desc' para ordem decrescente
         },
     });
     res.status(200).json(resultado)

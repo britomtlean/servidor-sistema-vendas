@@ -4,37 +4,149 @@
 <head>
   <meta charset="UTF-8" />
   <title>Socket.IO Demo</title>
+
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial;
-      min-width: 100vw;
+      width: 100vw;
       max-width: 1280px;
       min-height: 100vh;
-      margin: 40px auto;
-      padding: 0 5%;
+      margin: 0;
       background-color: rgb(96, 167, 167);
       font-size: 2rem;
       display: flex;
       flex-direction: column;
       justify-content: start;
       align-items: center;
+      overflow-x: hidden;
+      align-self: center;
+    }
+
+    header {
+      width: 100%;
+      height: 10vh;
+      padding: 0 5%;
+      margin-bottom: 100px;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      background-color: rgb(48, 83, 83);
+
+      & h1 {
+        color: #ccc;
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        font-weight: bold;
+      }
+
+      & li {
+        list-style: none;
+        display: inline-block;
+        margin-left: 20px;
+        color: #ccc;
+        font-size: 2.5rem;
+        font-weight: 300;
+        cursor: pointer;
+      }
+
+      & li:hover {
+        color: yellow;
+        border-bottom: 1px solid yellow;
+        padding-bottom: 2px;
+        transition: ease-in;
+      }
+
     }
 
     #mensagens {
       border: 1px solid #ccc;
-      padding: 20px;
-      height: 50vh;
+      margin-top: 40px;
+      margin-bottom: 40px;
+      padding: 20px 0;
+      height: 30vh;
+      width: 90%;
       overflow-y: auto;
-      background-color: rgb(191, 194, 196);
-      min-width: 600px;
+      background-color: rgba(191, 194, 196, 0.397);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: rgb(207, 207, 207);
+      color: black;
+      margin-bottom: 20px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+    }
+
+    th {
+      background-color: rgb(180, 197, 197);
+    }
+
+    tr:hover {
+      background: #2a2a2a;
+    }
+
+    .btn {
+      background: #2563eb;
+      color: white;
+      font-size: 2rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      font-weight: bold;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .loading {
+      font-size: 24px;
+      color: white;
+      margin-top: 40px;
     }
   </style>
 </head>
 
 <body>
+
+  <header>
+    <h1>Menu</h1>
+    <ul>
+      <li>Cadastrar</li>
+      <li>Editar</li>
+      <li>Dados</li>
+    </ul>
+  </header>
+
   <h1>Central de pedidos:</h1>
 
-  <div style="display: flex; justify-content: start; align-items: center; flex-direction: column;" id="mensagens"></div>
+  <div style="display: flex; justify-content: start; align-items: center; flex-direction: column; gap: 8px" id="mensagens"></div>
+
+<!-- 🔍 Campo de filtro por data -->
+<div style="margin-bottom: 20px;">
+  <label for="filtroData" style="font-size: 2.5rem; color: white;">Filtrar por data:</label>
+  <input type="date" id="filtroData" style="padding: 8px; border-radius: 6px; border: none; font-size: 2rem;" />
+  <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
+</div>
+
+  <div style="overflow-y: auto; height: 600px; width: 90%; border-radius: 8px;" id="tabelaContainer"></div>
+
 
 
   <!-- Importa o cliente do Socket.IO -->
@@ -51,9 +163,25 @@
       const title = document.createElement('h3');
       const ul = document.createElement('ul');
       const pedido = document.createElement('div');
+
       pedido.style.display = "flex";
+      pedido.style.flexDirection = "column";
+      pedido.style.gap = "8px"
+      pedido.style.paddingTop = "8px"
+      pedido.style.paddingBottom = "8px"
+      pedido.style.borderBottom = "1px solid black"
+      pedido.style.width = "100%"
+      pedido.style.background = "lightgray"
 
       title.innerHTML = "Pedido: XXX";
+      title.style.textAlign = "center"
+      title.style.padding = "0"
+
+      ul.style.display = "flex"
+      ul.style.flexDirection = "column"
+      ul.style.gap = "8px"
+      ul.style.padding = "8px 20px"
+      ul.style.listStyleType = "none"
 
       msg.forEach(item => {
         const li = document.createElement('li');
@@ -64,9 +192,149 @@
       pedido.appendChild(title);
       pedido.appendChild(ul);
       mensagensDiv.appendChild(pedido)
-      mensagensDiv.appendChild(document.createElement('hr'));
+      //mensagensDiv.appendChild(document.createElement('hr'));
     });
   </script>
+
+<script>
+  const tabelaContainer = document.getElementById("tabelaContainer");
+  const filtroDataInput = document.getElementById("filtroData");
+  const limparFiltroBtn = document.getElementById("limparFiltro");
+
+  let vendas = [];
+  let load = false;
+  let dataSelecionada = null;
+
+  // 🔄 Busca dados da API
+  async function carregarVendas() {
+    try {
+      const res = await fetch('https://vendas-config.onrender.com/vendas/', {
+        method: 'GET',
+        headers: { 'Content-type': 'application/json' }
+      });
+
+      const data = await res.json();
+
+      // Mapeia e formata os dados
+      vendas = data.map(array => ({
+        id: array.id_vendas,
+        dataOriginal: array.data_vendas, // mantém formato ISO
+        data: new Date(array.data_vendas).toLocaleString("pt-BR", {
+          timeZone: "America/Sao_Paulo"
+        }),
+        valorTotal: array.valorTotal_vendas,
+        status: array.status
+      }));
+
+      console.log("Vendas recebidas:", vendas);
+      renderTabela();
+    } catch (err) {
+      alert("Erro ao carregar vendas: " + err.message);
+    }
+  }
+
+  // Mostra "Carregando..."
+  function renderLoading() {
+    tabelaContainer.innerHTML = `<div class="loading">Carregando...</div>`;
+  }
+
+  // Renderiza a tabela
+  function renderTabela() {
+    if (load) return renderLoading();
+
+    // Filtra as vendas
+    let vendasFiltradas = vendas.filter(v => v.status == null);
+
+    if (dataSelecionada) {
+      vendasFiltradas = vendasFiltradas.filter(v => {
+        const dataVenda = new Date(v.dataOriginal).toISOString().split("T")[0];
+        return dataVenda === dataSelecionada;
+      });
+    }
+
+    if (vendasFiltradas.length === 0) {
+      tabelaContainer.innerHTML = `<div class="loading">Nenhuma venda encontrada para esta data</div>`;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Informações</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    vendasFiltradas.forEach(row => {
+      html += `
+        <tr>
+          <td>${row.id}</td>
+          <td>${parseFloat(row.valorTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+          <td>${row.data}</td>
+          <td><a href="/vendas/${row.id}" style="color: #60a5fa;">Detalhes</a></td>
+          <td><button class="btn" onclick="handleConcluir(${row.id})">Concluir</button></td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    tabelaContainer.innerHTML = html;
+  }
+
+  // Ação do botão "Concluir"
+  async function handleConcluir(id) {
+    const venda = vendas.find(v => v.id === id);
+    if (venda.status === true) {
+      alert('Esta venda já está fechada!');
+      return;
+    }
+
+    load = true;
+    renderLoading();
+
+    await new Promise(resolve => setTimeout(resolve, 1500)); // simulação
+    venda.status = true;
+
+    load = false;
+    renderTabela();
+  }
+
+  // Filtro de data
+  filtroDataInput.addEventListener("change", (e) => {
+    dataSelecionada = e.target.value;
+    renderTabela();
+  });
+
+  // Limpar filtro
+  limparFiltroBtn.addEventListener("click", () => {
+    dataSelecionada = null;
+    filtroDataInput.value = "";
+    renderTabela();
+  });
+
+  // Atualização automática (a cada 5s)
+  setInterval(() => {
+    carregarVendas();
+  }, 5000);
+
+  // Botão "Painel"
+  document.getElementById("painelBtn").addEventListener("click", (e) => {
+    e.preventDefault();
+    alert("Voltando ao painel...");
+  });
+
+  // Inicia
+  renderLoading();
+  carregarVendas();
+</script>
+
+
 </body>
 
 </html>

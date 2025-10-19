@@ -41,7 +41,14 @@ app.use(express.static(path.join(__dirname, 'public')))
 const server = http.createServer(app);
 
 // Criando servidor Socket.IO
-const io = new Server(server, {});
+const io = new Server(server,
+    {
+        cors: {
+            origin: ["https://sistema-vendas.netlify.app/", "http://localhost:5173"],
+            methods: ["GET", "POST"],
+            credentials: true
+        }
+    });
 
 io.on("connection", (socket) => {
     console.log(`Usuário conectado: ${socket.id}`);
@@ -49,10 +56,8 @@ io.on("connection", (socket) => {
     // Recebendo mensagem do cliente
     socket.on("mensagem", (data) => {
 
-        const nome = data.map(array => array.nome)
-
         console.log(`Pedido recebido: ${JSON.stringify(data)}`);
-        
+
         // Envia para todos os clientes conectados
         io.emit("mensagem_retorno", data);
     });
