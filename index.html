@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Socket.IO Demo</title>
+  <title>Central de Pedidos</title>
 
   <style>
     * {
@@ -37,32 +37,30 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-
       background-color: rgb(48, 83, 83);
+    }
 
-      & h1 {
-        color: #ccc;
-        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-        font-weight: bold;
-      }
+    header h1 {
+      color: #ccc;
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-weight: bold;
+    }
 
-      & li {
-        list-style: none;
-        display: inline-block;
-        margin-left: 20px;
-        color: #ccc;
-        font-size: 2.5rem;
-        font-weight: 300;
-        cursor: pointer;
-      }
+    header li {
+      list-style: none;
+      display: inline-block;
+      margin-left: 20px;
+      color: #ccc;
+      font-size: 2.5rem;
+      font-weight: 300;
+      cursor: pointer;
+    }
 
-      & li:hover {
-        color: yellow;
-        border-bottom: 1px solid yellow;
-        padding-bottom: 2px;
-        transition: ease-in;
-      }
-
+    header li:hover {
+      color: yellow;
+      border-bottom: 1px solid yellow;
+      padding-bottom: 2px;
+      transition: ease-in;
     }
 
     #mensagens {
@@ -98,6 +96,7 @@
 
     tr:hover {
       background: #2a2a2a;
+      color: white;
     }
 
     .btn {
@@ -136,52 +135,61 @@
 
   <h1>Central de pedidos:</h1>
 
-  <div style="display: flex; justify-content: start; align-items: center; flex-direction: column; gap: 8px" id="mensagens"></div>
+  
 
-<!-- 🔍 Campo de filtro por data -->
-<div style="margin-bottom: 20px;">
-  <label for="filtroData" style="font-size: 2.5rem; color: white;">Filtrar por data:</label>
-  <input type="date" id="filtroData" style="padding: 8px; border-radius: 6px; border: none; font-size: 2rem;" />
-  <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
-</div>
+  <div id="mensagens" style="display: flex; flex-direction: column; gap: 8px;"></div>
 
-  <div style="overflow-y: auto; height: 600px; width: 90%; border-radius: 8px;" id="tabelaContainer"></div>
+  <div style="margin-bottom: 20px;">
+    <label for="filtroData" style="font-size: 2.5rem; color: white;">Filtrar por data:</label>
+    <input type="date" id="filtroData" style="padding: 8px; border-radius: 6px; border: none; font-size: 2rem;" />
+    <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
+  </div>
 
+  <div id="tabelaContainer" style="overflow-y: auto; height: 600px; width: 90%; border-radius: 8px;"></div>
 
+  <button id="ativarSom" class="btn" style="margin-bottom:20px; margin-top: 40px; padding: 8px 20px; font-size: 2.2rem;">Ativar Som</button>
 
-  <!-- Importa o cliente do Socket.IO -->
+  <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
-    const socket = io(); // conecta ao servidor
-
+    const socket = io();
     const mensagensDiv = document.getElementById('mensagens');
+    let somAtivado = false;
 
-    // Recebe mensagem do servidor
+    // Botão de ativação do som
+    document.getElementById('ativarSom').addEventListener('click', () => {
+      somAtivado = true;
+      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      document.getElementById('ativarSom').style.display = 'none';
+    });
+
+    // Recebe pedidos do servidor
     socket.on('mensagem_retorno', (msg) => {
+      if (somAtivado) {
+        const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
+        audio.volume = 0.6;
+        audio.play().catch(err => console.warn('Falha ao tocar som:', err));
+      }
 
-
-      const title = document.createElement('h3');
-      const ul = document.createElement('ul');
       const pedido = document.createElement('div');
-
       pedido.style.display = "flex";
       pedido.style.flexDirection = "column";
-      pedido.style.gap = "8px"
-      pedido.style.paddingTop = "8px"
-      pedido.style.paddingBottom = "8px"
-      pedido.style.borderBottom = "1px solid black"
-      pedido.style.width = "100%"
-      pedido.style.background = "lightgray"
+      pedido.style.gap = "8px";
+      pedido.style.padding = "8px 0";
+      pedido.style.borderBottom = "1px solid black";
+      pedido.style.width = "100%";
+      pedido.style.background = "lightgray";
 
-      title.innerHTML = "Pedido: XXX";
-      title.style.textAlign = "center"
-      title.style.padding = "0"
+      const title = document.createElement('h3');
+      title.innerText = "Pedido: XXX";
+      title.style.textAlign = "center";
 
-      ul.style.display = "flex"
-      ul.style.flexDirection = "column"
-      ul.style.gap = "8px"
-      ul.style.padding = "8px 20px"
-      ul.style.listStyleType = "none"
+      const ul = document.createElement('ul');
+      ul.style.display = "flex";
+      ul.style.flexDirection = "column";
+      ul.style.gap = "8px";
+      ul.style.padding = "8px 20px";
+      ul.style.listStyleType = "none";
 
       msg.forEach(item => {
         const li = document.createElement('li');
@@ -191,73 +199,59 @@
 
       pedido.appendChild(title);
       pedido.appendChild(ul);
-      mensagensDiv.appendChild(pedido)
-      //mensagensDiv.appendChild(document.createElement('hr'));
+      mensagensDiv.appendChild(pedido);
     });
-  </script>
 
-<script>
-  const tabelaContainer = document.getElementById("tabelaContainer");
-  const filtroDataInput = document.getElementById("filtroData");
-  const limparFiltroBtn = document.getElementById("limparFiltro");
+    /************** Tabela de vendas **************/
+    const tabelaContainer = document.getElementById("tabelaContainer");
+    const filtroDataInput = document.getElementById("filtroData");
+    const limparFiltroBtn = document.getElementById("limparFiltro");
 
-  let vendas = [];
-  let load = false;
-  let dataSelecionada = null;
+    let vendas = [];
+    let load = false;
+    let dataSelecionada = null;
 
-  // 🔄 Busca dados da API
-  async function carregarVendas() {
-    try {
-      const res = await fetch('https://vendas-config.onrender.com/vendas/', {
-        method: 'GET',
-        headers: { 'Content-type': 'application/json' }
-      });
-
-      const data = await res.json();
-
-      // Mapeia e formata os dados
-      vendas = data.map(array => ({
-        id: array.id_vendas,
-        dataOriginal: array.data_vendas, // mantém formato ISO
-        data: new Date(array.data_vendas).toLocaleString("pt-BR", {
-          timeZone: "America/Sao_Paulo"
-        }),
-        valorTotal: array.valorTotal_vendas,
-        status: array.status
-      }));
-
-      console.log("Vendas recebidas:", vendas);
-      renderTabela();
-    } catch (err) {
-      alert("Erro ao carregar vendas: " + err.message);
-    }
-  }
-
-  // Mostra "Carregando..."
-  function renderLoading() {
-    tabelaContainer.innerHTML = `<div class="loading">Carregando...</div>`;
-  }
-
-  // Renderiza a tabela
-  function renderTabela() {
-    if (load) return renderLoading();
-
-    // Filtra as vendas
-    let vendasFiltradas = vendas.filter(v => v.status == null);
-
-    if (dataSelecionada) {
-      vendasFiltradas = vendasFiltradas.filter(v => {
-        const dataVenda = new Date(v.dataOriginal).toISOString().split("T")[0];
-        return dataVenda === dataSelecionada;
-      });
+    async function carregarVendas() {
+      try {
+        const res = await fetch('https://vendas-config.onrender.com/vendas/', {
+          method: 'GET',
+          headers: { 'Content-type': 'application/json' }
+        });
+        const data = await res.json();
+        vendas = data.map(array => ({
+          id: array.id_vendas,
+          dataOriginal: array.data_vendas,
+          data: new Date(array.data_vendas).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+          valorTotal: array.valorTotal_vendas,
+          status: array.status
+        }));
+        renderTabela();
+      } catch (err) {
+        alert("Erro ao carregar vendas: " + err.message);
+      }
     }
 
-    if (vendasFiltradas.length === 0) {
-      tabelaContainer.innerHTML = `<div class="loading">Nenhuma venda encontrada para esta data</div>`;
-      return;
+    function renderLoading() {
+      tabelaContainer.innerHTML = `<div class="loading">Carregando...</div>`;
     }
 
-    let html = `
+    function renderTabela() {
+      if (load) return renderLoading();
+
+      let vendasFiltradas = vendas.filter(v => v.status == null);
+      if (dataSelecionada) {
+        vendasFiltradas = vendasFiltradas.filter(v => {
+          const dataVenda = new Date(v.dataOriginal).toISOString().split("T")[0];
+          return dataVenda === dataSelecionada;
+        });
+      }
+
+      if (vendasFiltradas.length === 0) {
+        tabelaContainer.innerHTML = `<div class="loading">Nenhuma venda encontrada para esta data</div>`;
+        return;
+      }
+
+      let html = `
       <table>
         <thead>
           <tr>
@@ -269,72 +263,56 @@
           </tr>
         </thead>
         <tbody>
-    `;
+      `;
 
-    vendasFiltradas.forEach(row => {
-      html += `
+      vendasFiltradas.forEach(row => {
+        html += `
         <tr>
           <td>${row.id}</td>
           <td>${parseFloat(row.valorTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           <td>${row.data}</td>
           <td><a href="/vendas/${row.id}" style="color: #60a5fa;">Detalhes</a></td>
           <td><button class="btn" onclick="handleConcluir(${row.id})">Concluir</button></td>
-        </tr>
-      `;
-    });
+        </tr>`;
+      });
 
-    html += `</tbody></table>`;
-    tabelaContainer.innerHTML = html;
-  }
-
-  // Ação do botão "Concluir"
-  async function handleConcluir(id) {
-    const venda = vendas.find(v => v.id === id);
-    if (venda.status === true) {
-      alert('Esta venda já está fechada!');
-      return;
+      html += `</tbody></table>`;
+      tabelaContainer.innerHTML = html;
     }
 
-    load = true;
+    async function handleConcluir(id) {
+      const venda = vendas.find(v => v.id === id);
+      if (venda.status === true) {
+        alert('Esta venda já está fechada!');
+        return;
+      }
+      load = true;
+      renderLoading();
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      venda.status = true;
+      load = false;
+      renderTabela();
+    }
+
+    filtroDataInput.addEventListener("change", (e) => {
+      dataSelecionada = e.target.value;
+      renderTabela();
+    });
+
+    limparFiltroBtn.addEventListener("click", () => {
+      dataSelecionada = null;
+      filtroDataInput.value = "";
+      renderTabela();
+    });
+
+    setInterval(() => {
+      carregarVendas();
+    }, 5000);
+
+    // Inicializa
     renderLoading();
-
-    await new Promise(resolve => setTimeout(resolve, 1500)); // simulação
-    venda.status = true;
-
-    load = false;
-    renderTabela();
-  }
-
-  // Filtro de data
-  filtroDataInput.addEventListener("change", (e) => {
-    dataSelecionada = e.target.value;
-    renderTabela();
-  });
-
-  // Limpar filtro
-  limparFiltroBtn.addEventListener("click", () => {
-    dataSelecionada = null;
-    filtroDataInput.value = "";
-    renderTabela();
-  });
-
-  // Atualização automática (a cada 5s)
-  setInterval(() => {
     carregarVendas();
-  }, 5000);
-
-  // Botão "Painel"
-  document.getElementById("painelBtn").addEventListener("click", (e) => {
-    e.preventDefault();
-    alert("Voltando ao painel...");
-  });
-
-  // Inicia
-  renderLoading();
-  carregarVendas();
-</script>
-
+  </script>
 
 </body>
-
 </html>
