@@ -80,11 +80,6 @@ app.use('/', pruduvendas)
 app.use('/', produtos)
 
 
-
-app.get('/', (req, res) => {
-    res.send('hello world')
-})
-
 server.listen(3001, () => {
     console.log('online')
 })

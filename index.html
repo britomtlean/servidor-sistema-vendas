@@ -32,7 +32,7 @@
       width: 100%;
       height: 10vh;
       padding: 0 5%;
-      margin-bottom: 100px;
+      margin-bottom: 60px;
       position: relative;
       display: flex;
       justify-content: space-between;
@@ -63,16 +63,84 @@
       transition: ease-in;
     }
 
+    .active {
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      width: 90%;
+    }
+
+    section {
+      display: none;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      width: 90%;
+    }
+
     #mensagens {
       border: 1px solid #ccc;
       margin-top: 40px;
       margin-bottom: 40px;
       padding: 20px 0;
       height: 30vh;
-      width: 90%;
+      width: 100%;
       overflow-y: auto;
       background-color: rgba(191, 194, 196, 0.397);
       border-radius: 8px;
+    }
+
+    #produtos {
+
+      & .produtos-content {
+        border: 1px solid #ccc;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        height: 50vh;
+        width: 100%;
+        overflow-y: auto;
+        background-color: rgba(191, 194, 196, 0.397);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: center;
+
+      }
+
+      & ul {
+        width: 100%;
+      }
+
+      & li {
+        list-style-type: none;
+        border: 1.8px solid black;
+        width: 100%;
+        background-color: rgb(197, 197, 197);
+        padding: 20px 0;
+        text-align: center;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      & .button-content {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      & button {
+        flex: 1;
+        padding: 30px 30px;
+        background-color: #2563eb;
+        color: white;
+        font-size: 2.2rem;
+      }
+
     }
 
     table {
@@ -81,11 +149,12 @@
       background-color: rgb(207, 207, 207);
       color: black;
       margin-bottom: 20px;
+      font-size: 1.6rem;
     }
 
     th,
     td {
-      padding: 12px;
+      padding: 12px 2%;
       text-align: center;
       border-bottom: 1px solid #444;
     }
@@ -127,34 +196,97 @@
   <header>
     <h1>Menu</h1>
     <ul>
-      <li>Cadastrar</li>
-      <li>Editar</li>
-      <li>Dados</li>
+      <li onclick="sectionActive('pedidos')">Pedidos</li>
+      <li onclick="sectionActive('produtos')">Produtos</li>
+      <li onclick="sectionActive('clientes')">Clientes</li>
     </ul>
   </header>
 
-  <h1>Central de pedidos:</h1>
+  <button id="ativarSom" class="btn" style="margin-bottom: 80px; padding: 8px 20px; font-size: 2.2rem;">Ativar Som
+  </button>
 
-  
+  <section id="pedidos">
 
-  <div id="mensagens" style="display: flex; flex-direction: column; gap: 8px;"></div>
+    <h1>Central de pedidos:</h1>
 
-  <div style="margin-bottom: 20px;">
-    <label for="filtroData" style="font-size: 2.5rem; color: white;">Filtrar por data:</label>
-    <input type="date" id="filtroData" style="padding: 8px; border-radius: 6px; border: none; font-size: 2rem;" />
-    <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
-  </div>
+    <div id="mensagens" style="display: flex; flex-direction: column; gap: 8px;"></div>
 
-  <div id="tabelaContainer" style="overflow-y: auto; height: 600px; width: 90%; border-radius: 8px;"></div>
+    <div style="margin-bottom: 20px;">
+      <label for="filtroData" style="font-size: 2.5rem; color: white;">Filtrar por data:</label>
+      <input type="date" id="filtroData" style="padding: 8px; border-radius: 6px; border: none; font-size: 2rem;" />
+      <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
+    </div>
 
-  <button id="ativarSom" class="btn" style="margin-bottom:20px; margin-top: 40px; padding: 8px 20px; font-size: 2.2rem;">Ativar Som</button>
+    <div id="tabelaContainer" style="overflow-y: auto; height: 600px; width: 100%; border-radius: 8px;"></div>
+
+  </section>
+
+  <section id="produtos">
+    <h1>Produtos</h1>
+    <div class="produtos-content">
+      <ul id="lista-produtos"></ul>
+    </div>
+    <div class="button-content">
+      <button>Cadastrar</button>
+      <button>Estoque</button>
+    </div>
+  </section>
+
+  <section id="clientes">
+    <h1>Clientes</h1>
+  </section>
 
   <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
+
+
   <script>
     const socket = io();
     const mensagensDiv = document.getElementById('mensagens');
     let somAtivado = false;
+
+    const sectionActive = (active) => {
+      document.querySelectorAll('section').forEach(array => array.classList.remove('active'));
+      document.getElementById(active).classList.add('active');
+    }
+
+    const carregarProdutos = () => {
+      const produtos = [
+        {
+          produto: "açaí 200ml",
+          preco: "R$ 7,00"
+        },
+        {
+          produto: "açaí 300ml",
+          preco: "R$ 9,00"
+        },
+        {
+          produto: "açaí 400ml",
+          preco: "R$ 12,00"
+        },
+        {
+          produto: "açaí 500ml",
+          preco: "R$ 15,00"
+        },
+      ]
+      const ul = document.getElementById("lista-produtos")
+
+      produtos.forEach(array => {
+        const box = document.createElement("div") //criar div box
+        const produto = document.createElement("li") //criar li produto
+        const preco = document.createElement("li") //criar li preco
+
+        produto.innerHTML = "Produto:<br>"+array.produto //add produto na li
+        preco.innerHTML = "Preço: <br>"+array.preco //add preco na li
+
+        box.appendChild(produto) //add li com produto na div
+        box.appendChild(preco) //add li com preco na div
+        ul.appendChild(box) //add div na ul
+
+        box.style.display = "flex"
+      })
+    }
+
 
     // Botão de ativação do som
     document.getElementById('ativarSom').addEventListener('click', () => {
@@ -312,7 +444,10 @@
     // Inicializa
     renderLoading();
     carregarVendas();
+    sectionActive('pedidos')
+    carregarProdutos()
   </script>
 
 </body>
+
 </html>
