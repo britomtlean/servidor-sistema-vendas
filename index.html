@@ -7,9 +7,10 @@
 
   <style>
     * {
-      margin: 0;
+      margin: 0 auto;
       padding: 0;
       box-sizing: border-box;
+      overflow-x: hidden;
     }
 
     body {
@@ -49,7 +50,7 @@
     header li {
       list-style: none;
       display: inline-block;
-      margin-left: 20px;
+      margin-left: 30px;
       color: #ccc;
       font-size: 2.5rem;
       font-weight: 300;
@@ -87,7 +88,8 @@
       height: 30vh;
       width: 100%;
       overflow-y: auto;
-      background-color: rgba(191, 194, 196, 0.397);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
       border-radius: 8px;
     }
 
@@ -100,7 +102,8 @@
         height: 50vh;
         width: 100%;
         overflow-y: auto;
-        background-color: rgba(191, 194, 196, 0.397);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
         border-radius: 8px;
         display: flex;
         flex-direction: column;
@@ -115,7 +118,7 @@
 
       & li {
         list-style-type: none;
-        border: 1.8px solid black;
+        border-bottom: 2px solid rgb(158, 158, 158);
         width: 100%;
         background-color: rgb(197, 197, 197);
         padding: 20px 0;
@@ -135,6 +138,58 @@
 
       & button {
         flex: 1;
+        padding: 30px 30px;
+        background-color: #2563eb;
+        color: white;
+        font-size: 2.2rem;
+      }
+
+    }
+
+    #cadastrar {
+
+      & form {
+        border: 1px solid #ccc;
+        margin-top: 40px;
+        margin-bottom: 40px;
+        height: 50vh;
+        width: 100%;
+        overflow-y: auto;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0 5%;
+
+      }
+
+      & label {
+        width: 100%;
+        margin-bottom: 40px;
+      }
+
+      & h3 {
+        margin-bottom: 0.5rem;
+      }
+
+      form input,
+      form textarea {
+        display: block;
+        width: 100%;
+        height: 6rem;
+        padding: 5px;
+        font-size: 1.8rem;
+        border-radius: 8px;
+        background: rgba(209, 209, 209, 0.397);
+        outline: none;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      & button {
+        width: 100%;
         padding: 30px 30px;
         background-color: #2563eb;
         color: white;
@@ -205,6 +260,7 @@
   <button id="ativarSom" class="btn" style="margin-bottom: 80px; padding: 8px 20px; font-size: 2.2rem;">Ativar Som
   </button>
 
+  <!-- Seção de pedidos -->
   <section id="pedidos">
 
     <h1>Central de pedidos:</h1>
@@ -221,19 +277,72 @@
 
   </section>
 
+  <!-- Seção de produtos -->
   <section id="produtos">
     <h1>Produtos</h1>
     <div class="produtos-content">
       <ul id="lista-produtos"></ul>
     </div>
     <div class="button-content">
-      <button>Cadastrar</button>
-      <button>Estoque</button>
+      <button onclick="sectionActive('cadastrar')">Cadastrar</button>
+      <button onclick="() => {alert('Em construção')}">Estoque</button>
     </div>
   </section>
 
+  <!-- Seção de clientes -->
   <section id="clientes">
     <h1>Clientes</h1>
+  </section>
+
+  <!-- Seção de cadastro -->
+  <section id="cadastrar">
+    <h1>Cadastrar Produto</h1>
+
+    <form id="formProduto" enctype="multipart/form-data">
+      <label>
+        <h3>Nome do produto *</h3>
+        <input type="text" name="produto_produtos" id="produto" required />
+      </label>
+
+      <label>
+        <h3>Descrição</h3>
+        <textarea name="descricao_produtos" id="descricao" rows="3"></textarea>
+      </label>
+
+      <label>
+        <h3>Valor (ex: 8.50) *</h3>
+        <input type="text" name="valor_produtos" id="valor" required inputmode="decimal" />
+      </label>
+
+      <!--
+      <label>
+        <h3>Estoque *</h3>
+        <input type="number" name="estoque_produtos" id="estoque" required min="0" />
+      </label>
+    -->
+
+      <label>
+        <h3>Imagem do produto (PNG/JPG) *</h3>
+        <input type="file" name="imagem" id="imagem" accept="image/png, image/jpeg" required />
+      </label>
+
+      <div class="preview" id="previewWrapper" style="display:none;">
+        <div>
+          <small>Preview:</small>
+          <div><img id="previewImg" alt="preview da imagem" /></div>
+        </div>
+        <div>
+          <small id="fileInfo"></small>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button type="submit" id="btnEnviar">Enviar produto</button>
+        <div id="loading" style="display:none;">Enviando…</div>
+      </div>
+
+      <div class="status" id="status" style="display:none;"></div>
+    </form>
   </section>
 
   <!-- Socket.IO -->
@@ -244,6 +353,11 @@
     const socket = io();
     const mensagensDiv = document.getElementById('mensagens');
     let somAtivado = false;
+
+    document.getElementById("btnEnviar").addEventListener("click", function (e) {
+      e.preventDefault(); // 🚫 impede atualização da página
+      alert("Em construção");
+    })
 
     const sectionActive = (active) => {
       document.querySelectorAll('section').forEach(array => array.classList.remove('active'));
@@ -276,8 +390,8 @@
         const produto = document.createElement("li") //criar li produto
         const preco = document.createElement("li") //criar li preco
 
-        produto.innerHTML = "Produto:<br>"+array.produto //add produto na li
-        preco.innerHTML = "Preço: <br>"+array.preco //add preco na li
+        produto.innerHTML = "Produto:<br>" + array.produto //add produto na li
+        preco.innerHTML = "Preço: <br>" + array.preco //add preco na li
 
         box.appendChild(produto) //add li com produto na div
         box.appendChild(preco) //add li com preco na div
