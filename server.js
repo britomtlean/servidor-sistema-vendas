@@ -2,11 +2,12 @@
 import express from 'express'
 import cors from 'cors'
 
-import path from 'path'
-import { fileURLToPath } from 'url'
-
 //ORM
 import { PrismaClient } from '@prisma/client'
+
+//diretório
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 //SOCKET
 import http from "http";
@@ -26,12 +27,16 @@ app.use(cors());
 // Instancia para manipular o Banco de dados
 const prisma = new PrismaClient()
 
-// Necessário para funcionar corretamente com módulos ES (import/export)
+// Instancias para manipular diretórios
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+console.log("Diretório principal: ",__dirname)
 
 // Servir arquivos estáticos (como CSS, JS, imagens)
 app.use(express.static(path.join(__dirname, 'public')))
+
+//rota para exibir imagens
+app.use('/imagens', express.static(path.join(__dirname, '/public/imagens')));
 
 
 

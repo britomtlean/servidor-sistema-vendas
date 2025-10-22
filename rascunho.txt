@@ -1,0 +1,12 @@
+      & li {
+        list-style-type: none;
+        border-bottom: 2px solid rgb(158, 158, 158);
+        width: 100%;
+        background-color: rgb(197, 197, 197);
+        padding: 20px 0;
+        text-align: center;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
