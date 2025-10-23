@@ -140,3 +140,18 @@
         }
       })();
     }
+
+
+    export const cadastrarProduto = async () => {
+
+      //**************************selecionar elementos**************************//
+      const nome = document.getElementById('produto').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor = document.getElementById('valor').value;
+      const imagem = document.getElementById('imagem');
+      /********************************************************************** */
+      
+      
+
+      console.log(nome, descricao, valor)
+    }

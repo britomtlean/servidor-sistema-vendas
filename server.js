@@ -33,11 +33,10 @@ const __dirname = path.dirname(__filename)
 console.log("Diretório principal: ",__dirname)
 
 // Servir arquivos estáticos (como CSS, JS, imagens)
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, '/public/')))
 
 //rota para exibir imagens
 app.use('/imagens', express.static(path.join(__dirname, '/public/imagens')));
-
 
 
 /****************************SOCKET***************************** */

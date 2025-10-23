@@ -19,7 +19,8 @@
       max-width: 1280px;
       min-height: 100vh;
       margin: 0;
-      background-color: rgb(96, 167, 167);
+      /*background-color: rgb(96, 167, 167);*/
+      background: linear-gradient(to bottom, rgb(96, 167, 167), rgb(105, 168, 126));
       font-size: 2rem;
       display: flex;
       flex-direction: column;
@@ -27,6 +28,7 @@
       align-items: center;
       overflow-x: hidden;
       align-self: center;
+      padding-bottom: 10%;
     }
 
     header {
@@ -97,6 +99,7 @@
 
       & .produtos-content {
         border: 1px solid #ccc;
+        border-radius: 8px;
         margin-top: 40px;
         margin-bottom: 40px;
         height: 50vh;
@@ -128,7 +131,7 @@
       & button {
         flex: 1;
         padding: 30px 30px;
-        background-color: #2563eb;
+        background-color: red;
         color: white;
         font-size: 2.2rem;
       }
@@ -139,6 +142,7 @@
 
       & form {
         border: 1px solid #ccc;
+        border-radius: 8px;
         margin-top: 40px;
         margin-bottom: 40px;
         height: 50vh;
@@ -213,7 +217,7 @@
     }
 
     .btn {
-      background: #2563eb;
+      background: red;
       color: white;
       font-size: 2rem;
       padding: 6px 12px;
@@ -240,7 +244,7 @@
   <header>
     <h1>Menu</h1>
     <ul>
-      <li onclick="sectionActive('pedidos')">Pedidos</li>
+      <li onclick="sectionActive('pedidos')">Delivery</li>
       <li onclick="sectionActive('produtos')">Produtos</li>
       <li onclick="sectionActive('clientes')">Clientes</li>
     </ul>
@@ -315,23 +319,23 @@
         <input type="file" name="imagem" id="imagem" accept="image/png, image/jpeg" required />
       </label>
 
-      <div class="preview" id="previewWrapper" style="display:none;">
-        <div>
-          <small>Preview:</small>
-          <div><img id="previewImg" alt="preview da imagem" /></div>
-        </div>
-        <div>
-          <small id="fileInfo"></small>
-        </div>
-      </div>
-
       <div style="display:flex; gap:10px; align-items:center;">
-        <button type="submit" id="btnEnviar">Enviar produto</button>
+        <button type="submit" id="btnEnviar" onclick="cadastrarProduto()">Enviar produto</button>
         <div id="loading" style="display:none;">Enviando…</div>
       </div>
 
       <div class="status" id="status" style="display:none;"></div>
     </form>
+
+    <div class="preview" id="previewWrapper"
+      style="display:none; max-height: 500px; width: 100%; justify-content: center; align-items: center; gap: 10px;">
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: start;">
+        <div style="flex: 4;"><img id="previewImg" alt="preview da imagem" /></div>
+      </div>
+      <div style="flex: 1;">
+        <small id="fileInfo"></small>
+      </div>
+    </div>
   </section>
 
   <!-- Socket.IO -->
@@ -340,14 +344,60 @@
 
   <script>
 
-    /******************************Alternar interface******************************/
+    /***************************** Function para cadastrar produto ******************************/
+    const cadastrarProduto = async () => {
+
+      //**************************selecionar elementos**************************//
+      const nome = document.getElementById('produto').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor = document.getElementById('valor').value;
+      const imagem = document.getElementById('imagem');
+
+      const previewWrapper = document.getElementById("previewWrapper");
+      const previewImg = document.getElementById("previewImg");
+      const fileInfo = document.getElementById("fileInfo");
+      const status = document.getElementById("status");
+      const loading = document.getElementById("loading");
+      /********************************************************************** */
+
+      console.log(imagem.files[0].name) //nome da imagem
+
+      // Preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        fileInfo.textContent = `${imagem.name} — ${(imagem.size / 1024 / 1024).toFixed(2)} MB`;
+        previewWrapper.style.display = "flex";
+        previewWrapper.style.flexDirection = "column";
+
+      };
+      reader.readAsDataURL(imagem.files[0]);
+
+      // Criar FormData
+      const fd = new FormData();
+      fd.append("produto_produtos", nome);
+      fd.append("descricao_produtos", descricao);
+      fd.append("valor_produtos", valor);
+      fd.append("imagem_produtos", imagem);
+
+      // UI de carregamento
+      loading.style.display = "block";
+    }
+
+
+
+    /****************************** Function para alternar interface ******************************/
     const sectionActive = (active) => {
       document.querySelectorAll('section').forEach(array => array.classList.remove('active'));
       document.getElementById(active).classList.add('active');
     }
 
-    /*****************************Carregamento de produtos**************************/
+
+
+    /************************** Function para carregamento de produtos **************************/
     const carregarProdutos = async () => {
+
+      /*******************************Código de requisição****************************/
 
       const res = await fetch("https://servidor-sistema-vendas.up.railway.app/produtos", {
         method: "GET",
@@ -359,13 +409,16 @@
 
       const produtos = await res.json()
       console.log(produtos.map(array => array))
+      /************************************************************************************
 
+
+
+      /***************************Criação de elementos************************/
 
       const ul = document.getElementById("lista-produtos"); //elemento html que irá receber código javascript
 
       produtos.forEach(array => {
 
-        /***************************Criação de elementos************************/
         const boxProduto = document.createElement("div") //div para separar cada produto
         const boxNome = document.createElement("div") //div para exibir o nome de cada produto
         const boxInfo = document.createElement("div") //div para exibir as informações de cada produto
@@ -373,18 +426,24 @@
         const produto = document.createElement("li") //li nome do produto
         const preco = document.createElement("li") //li preco do produto
         const img = document.createElement("img") //img imagem do produto
+        /***********************************************************************/
 
 
-        //inserção de dados nos elementos
+
+        /***************inserção de dados nos elementos**********************/
+
         produto.innerHTML = array.produto_produtos //recebe nome
-        preco.innerHTML = array.valor_produtos.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})
+        preco.innerHTML = array.valor_produtos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
         // 👉 Exibe a imagem do produto
         img.src = `https://servidor-sistema-vendas.up.railway.app/imagens/${array.imagem_produtos}`; //recebe imagem através da url
         img.alt = array.produto_produtos; //descrição do produto
+        /***************************************************************/
 
 
-        //inserção de elementos
+
+        /***************inserção de elementos*********************/
+
         boxNome.appendChild(produto) //add li com nome na div1
         boxInfo.appendChild(img) //add img na div2
         boxInfo.appendChild(preco) //add preço na div2
@@ -392,24 +451,30 @@
         boxProduto.appendChild(boxNome)
         boxProduto.appendChild(boxInfo)
         ul.appendChild(boxProduto)
+        /**********************************************************/
+
+
+
+        /*********************CSS******************************/
 
         boxNome.style.width = "100%"
         boxNome.style.textAlign = "center"
         boxNome.style.fontSize = "2.5rem"
         boxNome.style.fontWeight = "bold"
         boxNome.style.padding = "20px 0"
-        //boxNome.style.borderBottom = "1px solid black"
-        boxNome.style.background = "lightgray"
+        boxNome.style.background = "rgb(48, 83, 83)"
+        boxNome.style.color = "white"
 
         boxInfo.style.width = "100%"
         boxInfo.style.display = "flex"
         boxInfo.style.justifyContent = "center"
         boxInfo.style.alignItems = "center"
-        boxInfo.style.padding = "0 20px"
+        boxInfo.style.padding = "20px 20px"
 
         boxProduto.style.display = "flex"
         boxProduto.style.flexDirection = "column"
-        boxProduto.style.background = "rgb(197, 197, 197)"
+        boxProduto.style.background = "radial-gradient(circle, rgb(230,230,230), rgb(197,197,197))";
+
         boxProduto.style.minHeight = "250px"
         boxProduto.style.width = "100%"
         boxProduto.style.borderBottom = "2px solid rgb(158, 158, 158)"
@@ -422,22 +487,19 @@
         preco.style.textAlign = "center"
         preco.style.fontWeight = "bold"
         preco.style.fontSize = "2.5rem"
+        preco.style.position = "relative"
+        preco.style.right = "90px"
+        /*****************************************************/
       })
 
     }
 
 
 
-    
-/***********************************Socket **************************************/
+    /*********************************** Socket **************************************/
     const socket = io();
     const mensagensDiv = document.getElementById('mensagens');
     let somAtivado = false;
-
-    document.getElementById("btnEnviar").addEventListener("click", function (e) {
-      e.preventDefault(); // 🚫 impede atualização da página
-      alert("Em construção");
-    })
 
     // Botão de ativação do som
     document.getElementById('ativarSom').addEventListener('click', () => {
@@ -484,15 +546,22 @@
       pedido.appendChild(ul);
       mensagensDiv.appendChild(pedido);
     });
+    /***************************************************************************
+    
 
-    /************** Tabela de vendas **************/
+
+    /****************************** Tabela de vendas **************************/
     const tabelaContainer = document.getElementById("tabelaContainer");
     const filtroDataInput = document.getElementById("filtroData");
     const limparFiltroBtn = document.getElementById("limparFiltro");
 
     let vendas = [];
     let load = false;
-    let dataSelecionada = null;
+
+
+    // Monta no formato desejado
+    let dataSelecionada = null
+
 
     async function carregarVendas() {
       try {
@@ -534,7 +603,9 @@
         return;
       }
 
-      let html = `
+      /*********************criação de tabela*************************/
+
+      let tabela = `
       <table>
         <thead>
           <tr>
@@ -549,19 +620,29 @@
       `;
 
       vendasFiltradas.forEach(row => {
-        html += `
+        tabela += `
         <tr>
           <td>${row.id}</td>
           <td>${parseFloat(row.valorTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
           <td>${row.data}</td>
-          <td><a href="/vendas/${row.id}" style="color: #60a5fa;">Detalhes</a></td>
+          <td><a href="/vendas/${row.id}" style="color: black;">Detalhes</a></td>
           <td><button class="btn" onclick="handleConcluir(${row.id})">Concluir</button></td>
         </tr>`;
       });
 
-      html += `</tbody></table>`;
-      tabelaContainer.innerHTML = html;
+      tabela += `</tbody></table>`;
+      tabelaContainer.innerHTML = tabela;
     }
+    /****************************************************************************/
+
+
+
+
+
+
+
+
+
 
     async function handleConcluir(id) {
       const venda = vendas.find(v => v.id === id);
@@ -579,12 +660,13 @@
 
     filtroDataInput.addEventListener("change", (e) => {
       dataSelecionada = e.target.value;
+
       renderTabela();
     });
 
     limparFiltroBtn.addEventListener("click", () => {
       dataSelecionada = null;
-      filtroDataInput.value = "";
+      filtroDataInput.value = '';
       renderTabela();
     });
 
