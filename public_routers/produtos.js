@@ -22,7 +22,11 @@ router.post('/produtos', async (req, res) => {
 
     try {
 
-        console.log("Objetos recebidos: ",req.body) //objetos recebidos via body
+        if(!req.body || req.files || req.files.imagem_produtos){
+            return res.status(400).json({message: "Falta de dados na requisição"})
+        }
+
+        console.log("Objetos recebidos: ", req.body) //objetos recebidos via body
 
         const { produto_produtos, descricao_produtos, valor_produtos, estoque_produtos } = req.body;
         const arquivo = req.files.imagem_produtos;
@@ -37,10 +41,6 @@ router.post('/produtos', async (req, res) => {
 
         /******************************************************************************************************** */
 
-        await new Promise((resolve, reject) => {
-            arquivo.mv(caminhoDestino, (err) => (err ? reject(err) : resolve())); //código para mover o arquivo com base nos dados configurados
-        });
-
         const produtos = await prisma.produtos.create({
             data: {
                 produto_produtos,
@@ -51,9 +51,13 @@ router.post('/produtos', async (req, res) => {
             }
         })
 
-        console.log("Prooduto cadastrado: ",produtos)
+        await new Promise((resolve, reject) => {
+            arquivo.mv(caminhoDestino, (err) => (err ? reject(err) : resolve())); //código para mover o arquivo com base nos dados configurados
+        });
 
-        res.status(201).json({ message: "Cadastro realizado!"})
+        console.log("Prooduto cadastrado: ", produtos)
+
+        res.status(201).json({ message: "Cadastro realizado!" })
     }
     catch (err) {
         res.status(400).json(err.message)
