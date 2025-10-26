@@ -95,47 +95,39 @@
       border-radius: 8px;
     }
 
-    #produtos {
+    #produtos .produtos-content {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 40px;
+      margin-bottom: 40px;
+      height: 50vh;
+      width: 100%;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+    }
 
-      & .produtos-content {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        margin-top: 40px;
-        margin-bottom: 40px;
-        height: 50vh;
-        width: 100%;
-        overflow-y: auto;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        justify-content: start;
-        align-items: center;
+    #produtos ul {
+      width: 100%;
+    }
 
-      }
+    #produtos .button-content {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-      & ul {
-        width: 100%;
-      }
-
-
-
-      & .button-content {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      & button {
-        flex: 1;
-        padding: 30px 30px;
-        background-color: red;
-        color: white;
-        font-size: 2.2rem;
-      }
-
+    #produtos button {
+      flex: 1;
+      padding: 30px 30px;
+      background-color: red;
+      color: white;
+      font-size: 2.2rem;
     }
 
     #cadastrar {
@@ -524,55 +516,55 @@
 
 
     /**************************** Function para receber dados via socket**************************/
-      const socket = io();
-      const mensagensDiv = document.getElementById('mensagens');
-      let somAtivado = false;
+    const socket = io();
+    const mensagensDiv = document.getElementById('mensagens');
+    let somAtivado = false;
 
-      // Botão de ativação do som
-      document.getElementById('ativarSom').addEventListener('click', () => {
-        somAtivado = true;
-        window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        document.getElementById('ativarSom').style.display = 'none';
+    // Botão de ativação do som
+    document.getElementById('ativarSom').addEventListener('click', () => {
+      somAtivado = true;
+      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      document.getElementById('ativarSom').style.display = 'none';
+    });
+
+    // Recebe pedidos do servidor
+    socket.on('mensagem_retorno', (msg) => {
+      if (somAtivado) {
+        const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
+        audio.volume = 0.8;
+        audio.play().catch(err => console.warn('Falha ao tocar som:', err));
+      }
+
+      const pedido = document.createElement('div');
+      pedido.style.display = "flex";
+      pedido.style.flexDirection = "column";
+      pedido.style.gap = "8px";
+      pedido.style.padding = "8px 0";
+      pedido.style.borderBottom = "1px solid black";
+      pedido.style.width = "100%";
+      pedido.style.background = "lightgray";
+
+      const title = document.createElement('h3');
+      title.innerText = "Pedido: XXX";
+      title.style.textAlign = "center";
+
+      const ul = document.createElement('ul');
+      ul.style.display = "flex";
+      ul.style.flexDirection = "column";
+      ul.style.gap = "8px";
+      ul.style.padding = "8px 20px";
+      ul.style.listStyleType = "none";
+
+      msg.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
+        ul.appendChild(li);
       });
 
-      // Recebe pedidos do servidor
-      socket.on('mensagem_retorno', (msg) => {
-        if (somAtivado) {
-          const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
-          audio.volume = 0.8;
-          audio.play().catch(err => console.warn('Falha ao tocar som:', err));
-        }
-
-        const pedido = document.createElement('div');
-        pedido.style.display = "flex";
-        pedido.style.flexDirection = "column";
-        pedido.style.gap = "8px";
-        pedido.style.padding = "8px 0";
-        pedido.style.borderBottom = "1px solid black";
-        pedido.style.width = "100%";
-        pedido.style.background = "lightgray";
-
-        const title = document.createElement('h3');
-        title.innerText = "Pedido: XXX";
-        title.style.textAlign = "center";
-
-        const ul = document.createElement('ul');
-        ul.style.display = "flex";
-        ul.style.flexDirection = "column";
-        ul.style.gap = "8px";
-        ul.style.padding = "8px 20px";
-        ul.style.listStyleType = "none";
-
-        msg.forEach(item => {
-          const li = document.createElement('li');
-          li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
-          ul.appendChild(li);
-        });
-
-        pedido.appendChild(title);
-        pedido.appendChild(ul);
-        mensagensDiv.appendChild(pedido);
-      });
+      pedido.appendChild(title);
+      pedido.appendChild(ul);
+      mensagensDiv.appendChild(pedido);
+    });
 
     /*******************************************************************************************
 
