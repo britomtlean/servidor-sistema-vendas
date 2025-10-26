@@ -8,6 +8,7 @@ import { PrismaClient } from '@prisma/client'
 //diretório
 import path from 'path'
 import { fileURLToPath } from 'url'
+import fileUpload from "express-fileupload";
 
 //SOCKET
 import http from "http";
@@ -23,6 +24,7 @@ import produtos from './public_routers/produtos.js'
 const app = express()
 app.use(express.json())
 app.use(cors());
+app.use(fileUpload());
 
 // Instancia para manipular o Banco de dados
 const prisma = new PrismaClient()

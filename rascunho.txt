@@ -1,12 +1,72 @@
-      & li {
-        list-style-type: none;
-        border-bottom: 2px solid rgb(158, 158, 158);
-        width: 100%;
-        background-color: rgb(197, 197, 197);
-        padding: 20px 0;
-        text-align: center;
-        min-height: 250px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+
+        const cadastrarProduto = async (e) => {
+      e.preventDefault();
+
+      const nome = document.getElementById('produto').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor = document.getElementById('valor').value;
+      const estoque = document.getElementById('estoque').value;
+      const imagem = document.getElementById('imagem').files[0];
+
+      const previewWrapper = document.getElementById("previewWrapper");
+      const previewImg = document.getElementById("previewImg");
+      const fileInfo = document.getElementById("fileInfo");
+      const status = document.getElementById("status");
+      const loading = document.getElementById("loading");
+
+      // Verifica se todos os campos obrigatórios foram preenchidos
+      if (!nome || !valor || !imagem) {
+        alert("Preencha todos os campos obrigatórios!");
+        return;
       }
+
+      // Exibe preview da imagem
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        fileInfo.textContent = `${imagem.name} — ${(imagem.size / 1024 / 1024).toFixed(2)} MB`;
+        previewWrapper.style.display = "flex";
+      };
+      reader.readAsDataURL(imagem);
+
+      // Criar FormData para envio
+      const fd = new FormData();
+      fd.append("produto_produtos", nome);
+      fd.append("descricao_produtos", descricao);
+      fd.append("valor_produtos", valor);
+      fd.append("imagem_produtos", imagem);
+      fd.append("estoque_produtos", estoque);
+
+      try {
+        loading.style.display = "block";
+
+        const res = await fetch("http://localhost:3001/produtos", {
+          method: "POST",
+          body: fd,
+        });
+
+        const data = await res.json();
+        loading.style.display = "none";
+
+        if (res.ok) {
+          status.style.display = "block";
+          status.style.color = "green";
+          status.textContent = "Produto cadastrado com sucesso!";
+          // Limpar formulário
+          document.getElementById("formProduto").reset();
+          previewWrapper.style.display = "none";
+          // Recarregar lista de produtos
+          carregarProdutos();
+        } else {
+          status.style.display = "block";
+          status.style.color = "red";
+          status.textContent = data.message || "Erro ao cadastrar produto";
+        }
+      } catch (err) {
+        loading.style.display = "none";
+        status.style.display = "block";
+        status.style.color = "red";
+        status.textContent = "Erro: " + err.message;
+      }
+    };
+

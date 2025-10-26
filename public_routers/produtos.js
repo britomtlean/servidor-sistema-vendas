@@ -1,14 +1,64 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
 
+import { fileURLToPath } from "url";
+import path from "path";
+
 const router = express.Router()
 const prisma = new PrismaClient()
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 router.get('/produtos', async (req, res) => {
     let produtos = await prisma.produtos.findMany()
     res.status(200).json(produtos)
 })
 
+
+router.post('/produtos', async (req, res) => {
+
+    try {
+
+        console.log("Objetos recebidos: ",req.body) //objetos recebidos via body
+
+        const { produto_produtos, descricao_produtos, valor_produtos, estoque_produtos } = req.body;
+        const arquivo = req.files.imagem_produtos;
+
+        /****************************************************************************************************** */
+
+        const nomeArquivo = arquivo.name; //define o nome do arquivo
+        const pastaImagens = path.join(__dirname, "../public/imagens"); //define a pasta onde armazenar o arquivo
+        const caminhoDestino = path.join(pastaImagens, nomeArquivo); //configura os dados para mover o arquivo
+        console.log("caminho da imagem: ", caminhoDestino)
+        console.log(nomeArquivo)
+
+        /******************************************************************************************************** */
+
+        await new Promise((resolve, reject) => {
+            arquivo.mv(caminhoDestino, (err) => (err ? reject(err) : resolve())); //código para mover o arquivo com base nos dados configurados
+        });
+
+        const produtos = await prisma.produtos.create({
+            data: {
+                produto_produtos,
+                descricao_produtos,
+                valor_produtos: parseFloat(valor_produtos.replace(",", ".")),
+                estoque_produtos: parseInt(estoque_produtos),
+                imagem_produtos: nomeArquivo,
+            }
+        })
+
+        console.log("Prooduto cadastrado: ",produtos)
+
+        res.status(201).json({ message: "Cadastro realizado!"})
+    }
+    catch (err) {
+        res.status(400).json(err.message)
+    }
+})
 
 //rota para dar baixa ao concluir uma venda
 router.put('/produtos/:id/baixa', async (req, res) => {
