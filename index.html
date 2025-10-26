@@ -523,9 +523,7 @@
     }
 
 
-    /**************************** Function para enviar dados via socket**************************/
-    const socketIO = () => {
-
+    /**************************** Function para receber dados via socket**************************/
       const socket = io();
       const mensagensDiv = document.getElementById('mensagens');
       let somAtivado = false;
@@ -541,7 +539,7 @@
       socket.on('mensagem_retorno', (msg) => {
         if (somAtivado) {
           const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
-          audio.volume = 0.6;
+          audio.volume = 0.8;
           audio.play().catch(err => console.warn('Falha ao tocar som:', err));
         }
 
@@ -576,17 +574,17 @@
         mensagensDiv.appendChild(pedido);
       });
 
-    }
+    /*******************************************************************************************
 
 
 
 
 
 
-    
 
 
-    /****************************** Tabela de vendas **************************/
+
+  /****************************** Tabela de vendas **************************/
     const tabelaContainer = document.getElementById("tabelaContainer");
     const filtroDataInput = document.getElementById("filtroData");
     const limparFiltroBtn = document.getElementById("limparFiltro");
@@ -596,7 +594,7 @@
 
 
     // Monta no formato desejado
-    let dataSelecionada = null
+    let dataSelecionada = new Date().toISOString().split("T")[0];
 
 
     async function carregarVendas() {
@@ -672,32 +670,15 @@
     /****************************************************************************/
 
 
-
-
-
-    async function handleConcluir(id) {
-      const venda = vendas.find(v => v.id === id);
-      if (venda.status === true) {
-        alert('Esta venda já está fechada!');
-        return;
-      }
-      load = true;
-      renderLoading();
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      venda.status = true;
-      load = false;
+    limparFiltroBtn.addEventListener("click", () => {
+      dataSelecionada = null;
+      filtroDataInput.value = '';
       renderTabela();
-    }
+    });
 
     filtroDataInput.addEventListener("change", (e) => {
       dataSelecionada = e.target.value;
 
-      renderTabela();
-    });
-
-    limparFiltroBtn.addEventListener("click", () => {
-      dataSelecionada = null;
-      filtroDataInput.value = '';
       renderTabela();
     });
 
