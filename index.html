@@ -191,7 +191,7 @@
         font-size: 2.2rem;
       }
 
-      & img{
+      & img {
         max-width: 350px;
       }
 
@@ -387,7 +387,7 @@
       fd.append("estoque_produtos", estoque);
       fd.append("imagem_produtos", imagem.files[0]);
 
-      const res = await fetch("http://localhost:3001/produtos", {
+      const res = await fetch("https://servidor-sistema-vendas.up.railway.app/produtos", {
         method: "POST",
         body: fd,
       });
@@ -403,7 +403,8 @@
         // Recarregar lista de produtos
         carregarProdutos();
         btn.style.display = "block";
-      } else {
+      }
+      else {
         status.style.display = "block";
         status.style.color = "red";
         status.textContent = data.message || "Erro ao cadastrar produto";
@@ -425,7 +426,7 @@
     /************************** Function para carregar produtos **************************/
     const carregarProdutos = async () => {
 
-      /*******************************Código de requisição****************************/
+      //Código de requisição
 
       const res = await fetch("https://servidor-sistema-vendas.up.railway.app/produtos", {
         method: "GET",
@@ -437,14 +438,13 @@
 
       const produtos = await res.json()
       console.log(produtos.map(array => array))
-      /************************************************************************************
+      /************************************************************************************/
 
 
 
-      /***************************Criação de elementos************************/
+      //Criação de elementos
 
       const ul = document.getElementById("lista-produtos"); //elemento html que irá receber código javascript
-
       produtos.forEach(array => {
 
         const boxProduto = document.createElement("div") //div para separar cada produto
@@ -458,7 +458,7 @@
 
 
 
-        /***************inserção de dados nos elementos**********************/
+        //inserção de dados nos elementos
 
         produto.innerHTML = array.produto_produtos //recebe nome
         preco.innerHTML = array.valor_produtos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -470,7 +470,7 @@
 
 
 
-        /***************inserção de elementos*********************/
+        //inserção de elementos
 
         boxNome.appendChild(produto) //add li com nome na div1
         boxInfo.appendChild(img) //add img na div2
@@ -483,7 +483,7 @@
 
 
 
-        /*********************CSS******************************/
+        //CSS
 
         boxNome.style.width = "100%"
         boxNome.style.textAlign = "center"
@@ -523,57 +523,66 @@
     }
 
 
-    /*********************************** Socket **************************************/
-    const socket = io();
-    const mensagensDiv = document.getElementById('mensagens');
-    let somAtivado = false;
+    /**************************** Function para enviar dados via socket**************************/
+    const socketIO = () => {
 
-    // Botão de ativação do som
-    document.getElementById('ativarSom').addEventListener('click', () => {
-      somAtivado = true;
-      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      document.getElementById('ativarSom').style.display = 'none';
-    });
+      const socket = io();
+      const mensagensDiv = document.getElementById('mensagens');
+      let somAtivado = false;
 
-    // Recebe pedidos do servidor
-    socket.on('mensagem_retorno', (msg) => {
-      if (somAtivado) {
-        const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
-        audio.volume = 0.6;
-        audio.play().catch(err => console.warn('Falha ao tocar som:', err));
-      }
-
-      const pedido = document.createElement('div');
-      pedido.style.display = "flex";
-      pedido.style.flexDirection = "column";
-      pedido.style.gap = "8px";
-      pedido.style.padding = "8px 0";
-      pedido.style.borderBottom = "1px solid black";
-      pedido.style.width = "100%";
-      pedido.style.background = "lightgray";
-
-      const title = document.createElement('h3');
-      title.innerText = "Pedido: XXX";
-      title.style.textAlign = "center";
-
-      const ul = document.createElement('ul');
-      ul.style.display = "flex";
-      ul.style.flexDirection = "column";
-      ul.style.gap = "8px";
-      ul.style.padding = "8px 20px";
-      ul.style.listStyleType = "none";
-
-      msg.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
-        ul.appendChild(li);
+      // Botão de ativação do som
+      document.getElementById('ativarSom').addEventListener('click', () => {
+        somAtivado = true;
+        window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        document.getElementById('ativarSom').style.display = 'none';
       });
 
-      pedido.appendChild(title);
-      pedido.appendChild(ul);
-      mensagensDiv.appendChild(pedido);
-    });
-    /***************************************************************************
+      // Recebe pedidos do servidor
+      socket.on('mensagem_retorno', (msg) => {
+        if (somAtivado) {
+          const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
+          audio.volume = 0.6;
+          audio.play().catch(err => console.warn('Falha ao tocar som:', err));
+        }
+
+        const pedido = document.createElement('div');
+        pedido.style.display = "flex";
+        pedido.style.flexDirection = "column";
+        pedido.style.gap = "8px";
+        pedido.style.padding = "8px 0";
+        pedido.style.borderBottom = "1px solid black";
+        pedido.style.width = "100%";
+        pedido.style.background = "lightgray";
+
+        const title = document.createElement('h3');
+        title.innerText = "Pedido: XXX";
+        title.style.textAlign = "center";
+
+        const ul = document.createElement('ul');
+        ul.style.display = "flex";
+        ul.style.flexDirection = "column";
+        ul.style.gap = "8px";
+        ul.style.padding = "8px 20px";
+        ul.style.listStyleType = "none";
+
+        msg.forEach(item => {
+          const li = document.createElement('li');
+          li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
+          ul.appendChild(li);
+        });
+
+        pedido.appendChild(title);
+        pedido.appendChild(ul);
+        mensagensDiv.appendChild(pedido);
+      });
+
+    }
+
+
+
+
+
+
     
 
 
@@ -661,11 +670,6 @@
       tabelaContainer.innerHTML = tabela;
     }
     /****************************************************************************/
-
-
-
-
-
 
 
 
