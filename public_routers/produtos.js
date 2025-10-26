@@ -22,7 +22,7 @@ router.post('/produtos', async (req, res) => {
 
     try {
 
-        if(!req.body || req.files || req.files.imagem_produtos){
+        if(!req.body || !req.files || !req.files.imagem_produtos){
             return res.status(400).json({message: "Falta de dados na requisição"})
         }
 
