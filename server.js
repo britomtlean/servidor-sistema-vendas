@@ -1,4 +1,4 @@
-//dependencias
+//Framework
 import express from 'express'
 
 //Middleware
@@ -7,9 +7,11 @@ import cors from 'cors'
 //ORM
 import { PrismaClient } from '@prisma/client'
 
-//diretórios
+//Diretórios
 import { fileURLToPath } from 'url'
 import path from 'path'
+
+//Upload de arquivos
 import fileUpload from "express-fileupload";
 
 //SOCKET
@@ -37,10 +39,13 @@ const __dirname = path.dirname(__filename) //dirétório sem o arquivo
 console.log("Diretório principal: ",__dirname)
 
 // Servir arquivos estáticos (como CSS, JS, imagens)
-app.use(express.static(path.join(__dirname, '/public/'))) //define como o diretório princial para manipulação
+app.use(express.static(path.join(__dirname, 'public'))) //define como o diretório princial para manipulação
 
 //rota para exibir imagens
 app.use('/imagens', express.static(path.join(__dirname, '/public/imagens'))); //define como rota pública para acessar arquivos de imagens
+
+
+/********************************************************************************************************************************************************* */
 
 
 /****************************SOCKET***************************** */

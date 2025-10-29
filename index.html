@@ -177,16 +177,50 @@
     }
 
     #cadastrar button {
-        width: 100%;
-        padding: 30px 30px;
-        background-color: #2563eb;
-        color: white;
-        font-size: 2.2rem;
-      }
+      width: 100%;
+      padding: 30px 30px;
+      background-color: #2563eb;
+      color: white;
+      font-size: 2.2rem;
+    }
 
-      img {
-        max-width: 350px;
-      }
+    img {
+      max-width: 350px;
+    }
+
+    #clientes form {
+      border: 1px solid #ccc;
+      margin-top: 40px;
+      margin-bottom: 40px;
+      padding: 20px 5%;
+      height: 30vh;
+      width: 100%;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+    }
+
+    #clientes input,
+    form textarea {
+      display: block;
+      width: 100%;
+      height: 6rem;
+      padding: 5px;
+      font-size: 1.8rem;
+      border-radius: 8px;
+      background: rgba(209, 209, 209, 0.397);
+      outline: none;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #clientes button {
+      width: 100%;
+      padding: 30px 30px;
+      background-color: #2563eb;
+      color: white;
+      font-size: 2.2rem;
+    }
 
 
     table {
@@ -235,6 +269,7 @@
       margin-top: 40px;
     }
   </style>
+
 </head>
 
 <body>
@@ -264,7 +299,10 @@
       <button id="limparFiltro" class="btn" style="margin-left: 8px;">Limpar</button>
     </div>
 
-    <div id="tabelaContainer" style="overflow-y: auto; height: 600px; width: 100%; border-radius: 8px;"></div>
+    <div id="tabelaContainer"
+      style="overflow-y: auto; height: 600px; width: 100%; border-radius: 8px; margin-bottom: 60px;"></div>
+
+    <div id="totalPedidos"></div>
 
   </section>
 
@@ -282,7 +320,21 @@
 
   <!-- Seção de clientes -->
   <section id="clientes">
-    <h1>Clientes</h1>
+    <h2>Cadastro de Clientes</h2>
+    <form style="display: flex; flex-flow: column; gap: 16px;" id="cadastroForm">
+      <label for="nome">Nome</label>
+      <input type="text" id="nome" name="nome" placeholder="Digite seu nome" required>
+
+      <label for="whatsapp">WhatsApp</label>
+      <input type="tel" id="whatsapp" name="whatsapp" placeholder="(99) 99999-9999" required
+        pattern="\(?\d{2}\)?\s?\d{4,5}-?\d{4}">
+
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required minlength="6">
+
+      <button type="submit">Cadastrar</button>
+      <div class="message" id="message"></div>
+    </form>
   </section>
 
   <!-- Seção de cadastro -->
@@ -335,379 +387,11 @@
 
   <!-- Socket.IO -->
   <script src="/socket.io/socket.io.js"></script>
-
-
-  <script>
-
-    /***************************** Function para cadastrar produto ******************************/
-    document.getElementById("formProduto").addEventListener("submit", async (e) => {
-      e.preventDefault()
-
-      //**************************selecionar elementos**************************//
-      const nome = document.getElementById('produto').value;
-      const descricao = document.getElementById('descricao').value;
-      const valor = document.getElementById('valor').value;
-      const estoque = document.getElementById('estoque').value;
-      const imagem = document.getElementById('imagem');
-      const btn = document.getElementById('btnEnviar');
-
-      const previewWrapper = document.getElementById("previewWrapper");
-      const previewImg = document.getElementById("previewImg");
-      const fileInfo = document.getElementById("fileInfo");
-      const status = document.getElementById("status");
-      const loading = document.getElementById("loading");
-      /********************************************************************** */
-
-      btn.style.display = "none";
-
-      // Preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        previewImg.src = e.target.result;
-        fileInfo.textContent = `${imagem.name} — ${(imagem.size / 1024 / 1024).toFixed(2)} MB`;
-        previewWrapper.style.display = "flex";
-        previewWrapper.style.flexDirection = "column";
-
-      };
-      reader.readAsDataURL(imagem.files[0]);
-
-      // Criar FormData
-      const fd = new FormData();
-      fd.append("produto_produtos", nome);
-      fd.append("descricao_produtos", descricao);
-      fd.append("valor_produtos", valor);
-      fd.append("estoque_produtos", estoque);
-      fd.append("imagem_produtos", imagem.files[0]);
-
-      const res = await fetch("https://servidor-sistema-vendas.up.railway.app/produtos", {
-        method: "POST",
-        body: fd,
-      });
-
-      const data = await res.json()
-
-      if (res.ok) {
-        status.style.display = "block";
-        status.style.color = "green";
-        status.textContent = data.message || "Produto cadastrado com sucesso!";
-        // Limpar formulário
-        document.getElementById("formProduto").reset();
-        // Recarregar lista de produtos
-        carregarProdutos();
-        btn.style.display = "block";
-      }
-      else {
-        status.style.display = "block";
-        status.style.color = "red";
-        status.textContent = data.message || "Erro ao cadastrar produto";
-        btn.style.display = "block"
-      }
-
-      // UI de carregamento
-      //loading.style.display = "block";
-    });
-
-
-    /****************************** Function para alternar interface ******************************/
-    const sectionActive = (active) => {
-      document.querySelectorAll('section').forEach(array => array.classList.remove('active'));
-      document.getElementById(active).classList.add('active');
-    }
-
-
-    /************************** Function para carregar produtos **************************/
-    const carregarProdutos = async () => {
-
-      //Código de requisição
-
-      const res = await fetch("https://servidor-sistema-vendas.up.railway.app/produtos", {
-        method: "GET",
-        headers:
-        {
-          'Content-type': 'application-json'
-        }
-      })
-
-      const produtos = await res.json()
-      console.log(produtos.map(array => array))
-      /************************************************************************************/
-
-
-
-      //Criação de elementos
-
-      const ul = document.getElementById("lista-produtos"); //elemento html que irá receber código javascript
-      produtos.forEach(array => {
-
-        const boxProduto = document.createElement("div") //div para separar cada produto
-        const boxNome = document.createElement("div") //div para exibir o nome de cada produto
-        const boxInfo = document.createElement("div") //div para exibir as informações de cada produto
-
-        const produto = document.createElement("li") //li nome do produto
-        const preco = document.createElement("li") //li preco do produto
-        const img = document.createElement("img") //img imagem do produto
-        const a = document.createElement("a")
-        /***********************************************************************/
-
-
-
-        //inserção de dados nos elementos
-
-        produto.innerHTML = array.produto_produtos //recebe nome
-        preco.innerHTML = array.valor_produtos.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-        a.innerHTML = "Detalhes"
-        a.href = ""
-
-        // 👉 Exibe a imagem do produto
-        img.src = `https://servidor-sistema-vendas.up.railway.app/imagens/${array.imagem_produtos}`; //recebe imagem através da url
-        img.alt = array.produto_produtos; //descrição do produto
-        /***************************************************************/
-
-
-
-        //inserção de elementos
-
-        boxNome.appendChild(produto) //add li com nome na div1
-        boxInfo.appendChild(img) //add img na div2
-        boxInfo.appendChild(preco) //add preço na div2
-        boxInfo.appendChild(a)
-
-        boxProduto.appendChild(boxNome)
-        boxProduto.appendChild(boxInfo)
-        ul.appendChild(boxProduto)
-        /**********************************************************/
-
-
-
-        //CSS
-
-        boxNome.style.width = "100%"
-        boxNome.style.textAlign = "center"
-        boxNome.style.fontSize = "2.5rem"
-        boxNome.style.fontWeight = "bold"
-        boxNome.style.padding = "20px 0"
-        boxNome.style.background = "rgb(48, 83, 83)"
-        boxNome.style.color = "white"
-
-        boxInfo.style.width = "100%"
-        boxInfo.style.display = "flex"
-        boxInfo.style.justifyContent = "center"
-        boxInfo.style.alignItems = "center"
-        boxInfo.style.padding = "20px 20px"
-
-        boxProduto.style.display = "flex"
-        boxProduto.style.flexDirection = "column"
-        boxProduto.style.background = "radial-gradient(circle, rgb(230,230,230,0.3), rgb(197,197,197,0.3))";
-
-        boxProduto.style.minHeight = "250px"
-        boxProduto.style.width = "100%"
-        boxProduto.style.borderBottom = "2px solid rgb(158, 158, 158)"
-
-        img.style.width = "250px"
-        img.style.borderRadius = "50%"
-        img.style.flex = "1"
-
-        preco.style.flex = "3"
-        preco.style.textAlign = "center"
-        preco.style.fontWeight = "bold"
-        preco.style.fontSize = "2.5rem"
-        preco.style.position = "relative"
-        //preco.style.right = "90px"
-
-
-        a.style.position = "relative"
-        a.style.right = "40px"
-        /*****************************************************/
-      })
-
-    }
-
-
-    /**************************** Function para receber dados via socket**************************/
-    const socket = io();
-    const mensagensDiv = document.getElementById('mensagens');
-    let somAtivado = false;
-
-    // Botão de ativação do som
-    document.getElementById('ativarSom').addEventListener('click', () => {
-      somAtivado = true;
-      window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      document.getElementById('ativarSom').style.display = 'none';
-    });
-
-    // Recebe pedidos do servidor
-    socket.on('mensagem_retorno', (msg) => {
-      if (somAtivado) {
-        const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
-        audio.volume = 0.8;
-        audio.play().catch(err => console.warn('Falha ao tocar som:', err));
-      }
-
-      const pedido = document.createElement('div');
-      pedido.style.display = "flex";
-      pedido.style.flexDirection = "column";
-      pedido.style.gap = "8px";
-      pedido.style.padding = "8px 0";
-      pedido.style.borderBottom = "1px solid black";
-      pedido.style.width = "100%";
-      pedido.style.background = "lightgray";
-
-      const title = document.createElement('h3');
-      title.innerText = "Pedido: XXX";
-      title.style.textAlign = "center";
-
-      const ul = document.createElement('ul');
-      ul.style.display = "flex";
-      ul.style.flexDirection = "column";
-      ul.style.gap = "8px";
-      ul.style.padding = "8px 20px";
-      ul.style.listStyleType = "none";
-
-      msg.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `Produto: ${item.nome}, Quantidade: ${item.quantidade}`;
-        ul.appendChild(li);
-      });
-
-      pedido.appendChild(title);
-      pedido.appendChild(ul);
-      mensagensDiv.appendChild(pedido);
-    });
-
-    /*******************************************************************************************
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-  /****************************** Tabela de vendas **************************/
-    const tabelaContainer = document.getElementById("tabelaContainer");
-    const filtroDataInput = document.getElementById("filtroData");
-    const limparFiltroBtn = document.getElementById("limparFiltro");
-
-    let vendas = [];
-    let load = false;
-
-
-    // Monta no formato desejado
-    let dataSelecionada = new Date().toISOString().split("T")[0];
-
-    function renderLoading() {
-      tabelaContainer.innerHTML = `<div class="loading">Carregando...</div>`;
-    }
-
-    function renderTabela() {
-      if (load) return renderLoading();
-
-      let vendasFiltradas = vendas.filter(v => v.status == null);
-      if (dataSelecionada) {
-        vendasFiltradas = vendasFiltradas.filter(v => {
-          const dataVenda = new Date(v.dataOriginal).toISOString().split("T")[0];
-          return dataVenda === dataSelecionada;
-        });
-      }
-
-      if (vendasFiltradas.length === 0) {
-        tabelaContainer.innerHTML = `<div class="loading">Nenhuma venda encontrada para esta data</div>`;
-        return;
-      }
-
-
-
-
-
-      /*********************criação de tabela*************************/
-
-      let tabela = `
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Valor</th>
-            <th>Data</th>
-            <th>Informações</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-
-      vendasFiltradas.forEach(row => {
-        tabela += `
-        <tr>
-          <td>${row.id}</td>
-          <td>${parseFloat(row.valorTotal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-          <td>${row.data}</td>
-          <td><a href="/PDF/venda_${row.id}.pdf" target="_blank" style="color: black;">Detalhes</a></td>
-          <td><button class="btn" onclick="handleConcluir(${row.id})">Concluir</button></td>
-        </tr>`;
-      });
-
-      tabela += `</tbody></table>`;
-      tabelaContainer.innerHTML = tabela;
-    }
-
-    async function carregarVendas() {
-      try {
-        const res = await fetch('https://servidor-sistema-vendas.up.railway.app/vendas/', {
-          method: 'GET',
-          headers: { 'Content-type': 'application/json' }
-        });
-
-        const data = await res.json();
-
-        vendas = data.map(array => ({
-          id: array.id_vendas,
-          dataOriginal: array.data_vendas,
-          data: new Date(array.data_vendas).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
-          valorTotal: array.valorTotal_vendas,
-          status: array.status
-        }));
-        renderTabela();
-      } catch (err) {
-        alert("Erro ao carregar vendas: " + err.message);
-      }
-    }
-
-
-    /****************************************************************************/
-
-    limparFiltroBtn.addEventListener("click", () => {
-      dataSelecionada = null;
-      filtroDataInput.value = '';
-      renderTabela();
-    });
-
-    filtroDataInput.addEventListener("change", (e) => {
-      dataSelecionada = e.target.value;
-
-      renderTabela();
-    });
-
-    setInterval(() => {
-      carregarVendas();
-    }, 5000);
-
-    // Inicializa
-    renderLoading();
-    carregarVendas();
-    sectionActive('pedidos')
-    carregarProdutos()
-  </script>
+  <script src="/js/carregarProdutos.js"></script>
+  <script src="/js/sectionActive.js"></script>
+  <script src="/js/cadastrarProduto.js"></script>
+  <script src="/js/socket.js"></script>
+  <script src="/js/centralPedidos.js"></script>
 
 </body>
 
