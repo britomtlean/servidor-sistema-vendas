@@ -1,24 +1,40 @@
-
-
 const socket = io();
 const mensagensDiv = document.getElementById('mensagens');
 let somAtivado = false;
+let audio; // variável global para o áudio pré-carregado
 
 // Botão de ativação do som
 document.getElementById('ativarSom').addEventListener('click', () => {
     somAtivado = true;
+
+    // Inicializa AudioContext (necessário em alguns navegadores móveis)
     window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Pré-carrega o áudio
+    audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
+    audio.volume = 0.8;
+
+    // Mostra que o som foi ativado
     document.getElementById('ativarSom').style.display = 'none';
+    console.log('Som ativado e áudio pré-carregado!');
 });
+
+// Função para tocar o áudio
+function tocarSom() {
+    if (!somAtivado || !audio) return;
+
+    // Clona o áudio para tocar várias vezes sem conflito
+    const novoAudio = audio.cloneNode();
+    novoAudio.currentTime = 0;
+    novoAudio.play().catch(err => console.warn('Falha ao tocar som:', err));
+}
 
 // Recebe pedidos do servidor
 socket.on('mensagem_retorno', (msg) => {
-    if (somAtivado) {
-        const audio = new Audio('/meme-fail-alert-locran-1-00-01.mp3');
-        audio.volume = 0.8;
-        audio.play().catch(err => console.warn('Falha ao tocar som:', err));
-    }
+    // Toca o som
+    tocarSom();
 
+    // Cria o pedido na interface
     const pedido = document.createElement('div');
     pedido.style.display = "flex";
     pedido.style.flexDirection = "column";
